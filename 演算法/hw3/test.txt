@@ -1,0 +1,35 @@
+module ShiftRegister5bit_Behavioral (
+    input clk,
+    input preset_n,         
+    input sw_load_enable,
+    input dir,              // 1 = left shift, 0 = right shift
+    input [4:0] sw_load_value,
+    output [6:0] seg0, seg1, seg2, seg3, seg4
+);
+
+    reg [4:0] data_reg;
+
+    always @(posedge clk or negedge preset_n) begin
+        if (!preset_n) begin
+            data_reg <= 5'b11111;  
+        end else if (sw_load_enable) begin
+            data_reg <= sw_load_value; 
+        end else begin
+            if (dir) begin
+                // 左移，最左bit循環到最右邊
+                data_reg <= {data_reg[3:0], data_reg[4]};
+            end else begin
+                // 右移，最右bit循環到最左邊
+                data_reg <= {data_reg[0], data_reg[4:1]};
+            end
+        end
+    end
+
+    // 將每個 bit 輸出到 7 段顯示器
+    BitTo7Segment b0 (.bit_value(data_reg[0]), .seg_out(seg0));
+    BitTo7Segment b1 (.bit_value(data_reg[1]), .seg_out(seg1));
+    BitTo7Segment b2 (.bit_value(data_reg[2]), .seg_out(seg2));
+    BitTo7Segment b3 (.bit_value(data_reg[3]), .seg_out(seg3));
+    BitTo7Segment b4 (.bit_value(data_reg[4]), .seg_out(seg4));
+
+endmodule
